@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>// USER_PROFILE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #030712;
+      overflow-x: hidden;
+    }
+
+    /* Scanlines overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.015) 2px,
+        rgba(0, 255, 65, 0.015) 4px
+      );
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* Matrix rain canvas */
+    #matrix-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0.07;
+      z-index: 0;
+    }
+
+    .content { position: relative; z-index: 10; }
+
+    /* Glitch text */
+    .glitch {
+      position: relative;
+      color: #00ff41;
+      text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41;
+    }
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .glitch::before {
+      color: #0ff;
+      animation: glitch-1 3.5s infinite;
+      clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+    }
+    .glitch::after {
+      color: #f0f;
+      animation: glitch-2 3.5s infinite;
+      clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+    }
+
+    @keyframes glitch-1 {
+      0%, 90%, 100% { transform: translate(0); opacity: 0; }
+      91% { transform: translate(-3px, 1px); opacity: 1; }
+      93% { transform: translate(3px, -1px); opacity: 1; }
+      95% { transform: translate(0); opacity: 0; }
+    }
+    @keyframes glitch-2 {
+      0%, 92%, 100% { transform: translate(0); opacity: 0; }
+      93% { transform: translate(3px, 2px); opacity: 1; }
+      95% { transform: translate(-3px, -2px); opacity: 1; }
+      97% { transform: translate(0); opacity: 0; }
+    }
+
+    /* Social button */
+    .social-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 14px 20px;
+      background: rgba(0, 255, 65, 0.04);
+      border: 1px solid rgba(0, 255, 65, 0.2);
+      color: #a0ffb8;
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      letter-spacing: 0.08em;
+      transition: all 0.2s ease;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .social-btn::before {
+      content: '';
+      position: absolute;
+      left: -100%;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,65,0.08), transparent);
+      transition: left 0.4s ease;
+    }
+    .social-btn:hover::before { left: 100%; }
+    .social-btn:hover {
+      background: rgba(0, 255, 65, 0.1);
+      border-color: #00ff41;
+      color: #00ff41;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.2), inset 0 0 20px rgba(0, 255, 65, 0.05);
+      transform: translateX(4px);
+    }
+    .social-btn .icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .social-btn:hover .icon { opacity: 1; }
+    .social-btn .arrow {
+      margin-left: auto;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: all 0.2s ease;
+      font-size: 0.75rem;
+      color: #00ff41;
+    }
+    .social-btn:hover .arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Terminal cursor blink */
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1.1em;
+      background: #00ff41;
+      margin-left: 4px;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Avatar ring */
+    .avatar-ring {
+      border: 1.5px solid rgba(0,255,65,0.4);
+      box-shadow: 0 0 0 4px rgba(0,255,65,0.06), 0 0 30px rgba(0,255,65,0.15);
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(0,255,65,0.06), 0 0 30px rgba(0,255,65,0.15); }
+      50% { box-shadow: 0 0 0 8px rgba(0,255,65,0.03), 0 0 50px rgba(0,255,65,0.25); }
+    }
+
+    /* Status dot */
+    .status-dot {
+      width: 8px; height: 8px;
+      background: #00ff41;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #00ff41;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.3); }
+    }
+
+    /* Card glow */
+    .card {
+      background: rgba(3, 7, 18, 0.9);
+      border: 1px solid rgba(0, 255, 65, 0.12);
+      box-shadow: 0 0 60px rgba(0,255,65,0.04), 0 25px 50px rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Divider */
+    .divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent);
+    }
+
+    /* Top bar flicker */
+    .top-bar {
+      animation: flicker 8s linear infinite;
+    }
+    @keyframes flicker {
+      0%, 99%, 100% { opacity: 1; }
+      99.5% { opacity: 0.85; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Matrix rain -->
+  <canvas id="matrix-canvas"></canvas>
+
+  <div class="content w-full max-w-sm mx-auto">
+
+    <!-- Top system bar -->
+    <div class="top-bar flex items-center justify-between mb-6 text-xs text-green-600 font-mono opacity-70">
+      <span>root@system:~$</span>
+      <span class="flex items-center gap-2">
+        <span class="status-dot"></span>
+        <span>ONLINE</span>
+      </span>
+    </div>
+
+    <!-- Main card -->
+    <div class="card rounded-lg p-8">
+
+      <!-- Terminal header bar -->
+      <div class="flex items-center gap-2 mb-6 pb-4 border-b border-green-900/40">
+        <div class="w-3 h-3 rounded-full bg-red-600/80"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+        <span class="ml-2 text-xs text-green-700 font-mono">profile.sh</span>
+      </div>
+
+      <!-- Avatar + identity -->
+      <div class="flex flex-col items-center mb-8">
+        <div class="avatar-ring w-24 h-24 rounded-full overflow-hidden mb-4">
+          <!-- Placeholder avatar — replace src with your photo -->
+          <img src="pfp.jpg" alt="avatar" class="w-full h-full object-cover" />
+        </div>
+
+        <h1 class="glitch text-xl font-bold tracking-widest uppercase mb-1" data-text="PHOENIX">PHOENIX</h1>
+        <p class="text-green-600 text-xs tracking-widest mb-3">[ FULL STACK DEV, SYS ADMIN ]</p>
+
+        <hr class="divider w-32 mb-3" />
+
+        <p class="text-green-700 text-xs text-center leading-relaxed max-w-xs">
+          <span class="text-green-500">//</span> building things in the dark<br/>
+          <span class="text-green-500">//</span> code → pray → repeat<span class="cursor"></span>
+        </p>
+      </div>
+
+      <!-- Social links -->
+      <div class="flex flex-col gap-3">
+
+        <!-- Telegram -->
+        <a href="https://t.me/nothacked" target="_blank" rel="noopener" class="social-btn rounded">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+          </svg>
+          <span>Telegram</span>
+          <span class="text-green-700 text-xs ml-1">@nothacked</span>
+          <span class="arrow">→</span>
+        </a>
+
+        <!-- GitHub -->
+        <a href="https://github.com/PhoenixInTheDark/" target="_blank" rel="noopener" class="social-btn rounded">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+          <span class="text-green-700 text-xs ml-1">@PhoenixInTheDark</span>
+          <span class="arrow">→</span>
+        </a>
+
+        <!-- YouTube -->
+        <a href="https://www.youtube.com/@phoenix33256" target="_blank" rel="noopener" class="social-btn rounded">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          <span>YouTube</span>
+          <span class="text-green-700 text-xs ml-1">@Phoenix101</span>
+          <span class="arrow">→</span>
+        </a>
+
+      <!-- Footer -->
+      <div class="mt-8 pt-4 border-t border-green-900/30">
+        <p class="text-center text-green-800 text-xs font-mono">
+          <span class="text-green-600">$</span> echo "made with <span class="text-red-700">❤</span> &amp; nano"
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Bottom system info -->
+    <div class="flex items-center justify-between mt-4 text-xs text-green-800 font-mono opacity-50">
+      <span>v1.0.0</span>
+      <span id="sys-time">--:--:--</span>
+      <span>64-bit</span>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Matrix rain ──────────────────────────────────────
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789ABCDEF<>/{}[]|\\'.split('');
+    let drops = [];
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const cols = Math.floor(canvas.width / 16);
+      drops = Array.from({ length: cols }, () => Math.random() * -50);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(3, 7, 18, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = '14px JetBrains Mono, monospace';
+
+      drops.forEach((y, i) => {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(char, i * 16, y * 16);
+        if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+    }
+
+    setInterval(drawMatrix, 50);
+
+    // ── Clock ─────────────────────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('sys-time').textContent =
+        [now.getHours(), now.getMinutes(), now.getSeconds()]
+          .map(n => String(n).padStart(2, '0'))
+          .join(':');
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
