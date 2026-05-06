@@ -15,6 +15,8 @@
 ![css](https://img.shields.io/badge/CSS3-tailwind-00ff41?style=for-the-badge&logo=tailwindcss&logoColor=00ff41&labelColor=030712)
 ![js](https://img.shields.io/badge/JavaScript-vanilla-00ff41?style=for-the-badge&logo=javascript&logoColor=00ff41&labelColor=030712)
 
+**[> phoenixinthedark.github.io/my_bio](https://phoenixinthedark.github.io/my_bio/)**
+
 *`root@system:~$ cat README.md`*
 
 </div>
